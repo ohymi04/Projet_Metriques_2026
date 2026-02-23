@@ -1,8 +1,28 @@
 import requests
 from flask import Flask, jsonify, render_template
+import sqlite3
+from datetime import datetime
 
 app = Flask(__name__)
 
+def init_db():
+    conn = sqlite3.connect('contacts.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nom TEXT,
+            prenom TEXT,
+            email TEXT,
+            objet TEXT,
+            message TEXT,
+            date_envoi TEXT
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_db()
 
 @app.route('/')
 def hello_world():
@@ -10,9 +30,9 @@ def hello_world():
 
 # Déposez votre code à partir d'ici :
 
-@app.route("/contact")
-def contact():
-    return render_template("contact.html")
+# @app.route("/contact")
+# def contact():
+#   return render_template("contact.html")
 
 @app.get("/paris")
 def api_paris():
@@ -54,6 +74,35 @@ def api_versailles():
 @app.route("/atelier")
 def atelier():
     return render_template("atelier.html")
+
+@app.route("/contact", methods=["GET", "POST"])
+def contact():
+    if request.method == "POST":
+        data = request.get_json()
+        conn = sqlite3.connect('contacts.db')
+        c = conn.cursor()
+        c.execute('''
+            INSERT INTO messages (nom, prenom, email, objet, message, date_envoi)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (
+            data.get('nom'), data.get('prenom'), data.get('email'),
+            data.get('objet'), data.get('message'),
+            datetime.now().strftime('%d/%m/%Y à %H:%M')
+        ))
+        conn.commit()
+        conn.close()
+        return jsonify({"status": "ok"})
+    return render_template("contact.html")
+
+@app.route("/admin")
+def admin():
+    conn = sqlite3.connect('contacts.db')
+    conn.row_factory = sqlite3.Row
+    c = conn.cursor()
+    c.execute('SELECT * FROM messages ORDER BY id DESC')
+    messages = [dict(row) for row in c.fetchall()]
+    conn.close()
+    return render_template("admin.html", messages=messages)
 
 # Ne rien mettre après ce commentaire
     

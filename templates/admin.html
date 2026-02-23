@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin — Correspondances · Bellechasse</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@400;500&family=EB+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:         #1a1410;
+      --surface:    #231c15;
+      --surface2:   #2e2318;
+      --border:     #3d2e1e;
+      --gold:       #b89a5a;
+      --gold-dim:   #8a7040;
+      --cream:      #f0e8d8;
+      --fog:        #c4b99a;
+      --fog-dim:    #7a6a50;
+      --hunter:     #4a5e38;
+      --hunter-bg:  rgba(74,94,56,0.15);
+      --red:        #8b3a2a;
+      --red-bg:     rgba(139,58,42,0.12);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--fog);
+      font-family: 'EB Garamond', serif;
+      min-height: 100vh;
+    }
+
+    /* Grain */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1000; opacity: 0.5;
+    }
+
+    /* === TOPBAR === */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .topbar-logo {
+      font-family: 'Cinzel', serif;
+      font-size: 11px;
+      letter-spacing: 0.3em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    .topbar-sep {
+      width: 1px; height: 24px;
+      background: var(--border);
+    }
+
+    .topbar-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 18px;
+      font-style: italic;
+      color: var(--cream);
+      font-weight: 300;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .count-badge {
+      background: rgba(184,154,90,0.12);
+      border: 1px solid rgba(184,154,90,0.3);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 0.2em;
+      color: var(--gold);
+    }
+
+    .btn-back {
+      padding: 8px 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--fog-dim);
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .btn-back:hover {
+      border-color: var(--gold-dim);
+      color: var(--gold);
+    }
+    .btn-back svg { width: 12px; height: 12px; }
+
+    /* === MAIN === */
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 48px 48px 80px;
+    }
+
+    /* === EMPTY STATE === */
+    .empty-state {
+      text-align: center;
+      padding: 100px 40px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.2s forwards;
+    }
+
+    .empty-icon {
+      width: 56px; height: 56px;
+      margin: 0 auto 24px;
+      color: var(--gold-dim);
+      opacity: 0.5;
+    }
+
+    .empty-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-style: italic;
+      color: var(--cream);
+      margin-bottom: 8px;
+    }
+
+    .empty-sub {
+      font-size: 15px;
+      font-style: italic;
+      color: var(--fog-dim);
+    }
+
+    /* === STATS ROW === */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.1s forwards;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      opacity: 0.4;
+    }
+
+    .stat-label {
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 34px;
+      font-weight: 300;
+      color: var(--cream);
+      line-height: 1;
+    }
+
+    .stat-sub {
+      font-size: 12px;
+      font-style: italic;
+      color: var(--fog-dim);
+      margin-top: 4px;
+    }
+
+    /* === TABLE SECTION === */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.2s forwards;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 24px;
+      font-style: italic;
+      color: var(--cream);
+      font-weight: 300;
+    }
+
+    .search-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-family: 'EB Garamond', serif;
+      font-size: 14px;
+      font-style: italic;
+      color: var(--fog);
+      outline: none;
+      width: 220px;
+      transition: border-color 0.2s;
+    }
+    .search-box::placeholder { color: var(--fog-dim); }
+    .search-box:focus { border-color: var(--gold-dim); }
+
+    /* === TABLE === */
+    .table-wrap {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.3s forwards;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    thead tr {
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    th {
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      padding: 14px 20px;
+      text-align: left;
+      font-weight: 400;
+      white-space: nowrap;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid rgba(61, 46, 30, 0.5);
+      transition: background 0.15s;
+      cursor: pointer;
+    }
+
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--surface2); }
+
+    td {
+      padding: 16px 20px;
+      font-size: 15px;
+      vertical-align: middle;
+    }
+
+    .td-id {
+      font-family: 'Cinzel', serif;
+      font-size: 10px;
+      color: var(--gold-dim);
+      letter-spacing: 0.1em;
+    }
+
+    .td-name {
+      color: var(--cream);
+      font-style: italic;
+      font-weight: 400;
+    }
+
+    .td-email {
+      color: var(--fog);
+      font-size: 14px;
+    }
+
+    .td-objet-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 3px;
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 400;
+    }
+
+    .objet-sejour   { background: rgba(88,130,70,0.15); color: #7ab05a; border: 1px solid rgba(88,130,70,0.3); }
+    .objet-chasse   { background: rgba(184,154,90,0.12); color: var(--gold); border: 1px solid rgba(184,154,90,0.25); }
+    .objet-evenement{ background: rgba(100,80,160,0.12); color: #9a88d0; border: 1px solid rgba(100,80,160,0.25); }
+    .objet-autre    { background: rgba(100,90,80,0.15); color: var(--fog-dim); border: 1px solid var(--border); }
+
+    .td-date {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      color: var(--fog-dim);
+      white-space: nowrap;
+    }
+
+    .td-msg-preview {
+      max-width: 260px;
+      font-size: 13px;
+      font-style: italic;
+      color: var(--fog-dim);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* === MODAL === */
+    .modal-overlay {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(10, 8, 5, 0.75);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      max-width: 580px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+      animation: modalIn 0.3s ease;
+    }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.96) translateY(12px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-header {
+      padding: 28px 32px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .modal-id {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      color: var(--gold-dim);
+      margin-bottom: 6px;
+    }
+
+    .modal-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 28px;
+      font-style: italic;
+      color: var(--cream);
+      font-weight: 300;
+    }
+
+    .modal-close {
+      background: none; border: none;
+      color: var(--fog-dim); cursor: pointer;
+      font-size: 20px; line-height: 1;
+      padding: 4px 8px;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--cream); }
+
+    .modal-body { padding: 24px 32px 32px; }
+
+    .modal-field {
+      margin-bottom: 20px;
+    }
+
+    .modal-field-label {
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold-dim);
+      margin-bottom: 6px;
+    }
+
+    .modal-field-value {
+      font-size: 16px;
+      color: var(--cream);
+      font-style: italic;
+      line-height: 1.6;
+    }
+
+    .modal-message-box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-size: 15px;
+      font-style: italic;
+      color: var(--fog);
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .modal-footer {
+      padding: 16px 32px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .btn-modal {
+      padding: 10px 24px;
+      border-radius: 4px;
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--fog-dim);
+      transition: all 0.2s;
+    }
+    .btn-modal:hover { border-color: var(--gold-dim); color: var(--gold); }
+
+    /* Filter tabs */
+    .filter-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.25s forwards;
+    }
+
+    .tab {
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--fog-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .tab.active, .tab:hover {
+      background: rgba(184,154,90,0.1);
+      border-color: rgba(184,154,90,0.35);
+      color: var(--gold);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .topbar { padding: 0 20px; }
+      main { padding: 28px 20px 60px; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
+      th:nth-child(6), td:nth-child(6) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">Bellechasse</div>
+      <div class="topbar-sep"></div>
+      <div class="topbar-title">Tableau des correspondances</div>
+    </div>
+    <div class="topbar-right">
+      <div class="count-badge" id="totalBadge">
+        {{ messages|length }} message{% if messages|length != 1 %}s{% endif %}
+      </div>
+      <a href="/contact" class="btn-back">
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M8 2L4 6l4 4"/>
+        </svg>
+        Retour
+      </a>
+    </div>
+  </div>
+
+  <main>
+
+    {% if messages %}
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total reçus</div>
+        <div class="stat-value">{{ messages|length }}</div>
+        <div class="stat-sub">correspondances</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Séjours</div>
+        <div class="stat-value">{{ messages|selectattr('objet','equalto','sejour')|list|length }}</div>
+        <div class="stat-sub">demandes de séjour</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Chasse</div>
+        <div class="stat-value">{{ messages|selectattr('objet','equalto','chasse')|list|length }}</div>
+        <div class="stat-sub">week-ends chasse</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Événements</div>
+        <div class="stat-value">{{ messages|selectattr('objet','equalto','evenement')|list|length }}</div>
+        <div class="stat-sub">privatisations</div>
+      </div>
+    </div>
+
+    <!-- FILTERS & SEARCH -->
+    <div class="section-header">
+      <div class="section-title">Correspondances reçues</div>
+      <input class="search-box" type="text" id="searchInput" placeholder="Rechercher…" oninput="filterTable()"/>
+    </div>
+
+    <div class="filter-tabs" id="filterTabs">
+      <button class="tab active" onclick="setFilter('tous', this)">Tous</button>
+      <button class="tab" onclick="setFilter('sejour', this)">Séjour</button>
+      <button class="tab" onclick="setFilter('chasse', this)">Chasse</button>
+      <button class="tab" onclick="setFilter('evenement', this)">Événement</button>
+      <button class="tab" onclick="setFilter('autre', this)">Autre</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap">
+      <table id="msgTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Nom & Prénom</th>
+            <th>Adresse électronique</th>
+            <th>Objet</th>
+            <th>Aperçu du message</th>
+            <th>Date d'envoi</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          {% for m in messages %}
+          <tr
+            data-objet="{{ m.objet }}"
+            data-search="{{ m.nom|lower }} {{ m.prenom|lower }} {{ m.email|lower }} {{ m.message|lower }}"
+            onclick="openModal({{ m.id }}, '{{ m.nom }}', '{{ m.prenom }}', '{{ m.email }}', '{{ m.objet }}', {{ m.message | tojson }}, '{{ m.date_envoi }}')"
+          >
+            <td class="td-id">#{{ '%03d'|format(m.id) }}</td>
+            <td class="td-name">{{ m.nom }} {{ m.prenom }}</td>
+            <td class="td-email">{{ m.email }}</td>
+            <td>
+              <span class="td-objet-badge objet-{{ m.objet }}">
+                {% if m.objet == 'sejour' %}Séjour
+                {% elif m.objet == 'chasse' %}Chasse
+                {% elif m.objet == 'evenement' %}Événement
+                {% else %}Autre{% endif %}
+              </span>
+            </td>
+            <td class="td-msg-preview">{{ m.message }}</td>
+            <td class="td-date">{{ m.date_envoi }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% else %}
+
+    <div class="empty-state">
+      <div class="empty-icon">
+        <svg viewBox="0 0 56 56" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="6" y="10" width="44" height="34" rx="2"/>
+          <path d="M6 14l22 17L50 14"/>
+          <path d="M18 36l-8 8M38 36l8 8"/>
+        </svg>
+      </div>
+      <p class="empty-title">Aucune correspondance reçue.</p>
+      <p class="empty-sub">Les messages du formulaire de contact apparaîtront ici.</p>
+    </div>
+
+    {% endif %}
+  </main>
+
+  <!-- MODAL -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <div>
+          <div class="modal-id" id="mId"></div>
+          <div class="modal-name" id="mName"></div>
+        </div>
+        <button class="modal-close" onclick="closeModalDirect()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-field">
+          <div class="modal-field-label">Adresse électronique</div>
+          <div class="modal-field-value" id="mEmail"></div>
+        </div>
+        <div class="modal-field">
+          <div class="modal-field-label">Objet de la demande</div>
+          <div class="modal-field-value" id="mObjet"></div>
+        </div>
+        <div class="modal-field">
+          <div class="modal-field-label">Date d'envoi</div>
+          <div class="modal-field-value" id="mDate"></div>
+        </div>
+        <div class="modal-field">
+          <div class="modal-field-label">Message</div>
+          <div class="modal-message-box" id="mMessage"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-modal" onclick="closeModalDirect()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let activeFilter = 'tous';
+
+    function setFilter(val, btn) {
+      activeFilter = val;
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      btn.classList.add('active');
+      filterTable();
+    }
+
+    function filterTable() {
+      const q = document.getElementById('searchInput').value.toLowerCase();
+      document.querySelectorAll('#tableBody tr').forEach(row => {
+        const objet  = row.dataset.objet;
+        const search = row.dataset.search;
+        const matchFilter = activeFilter === 'tous' || objet === activeFilter;
+        const matchSearch = !q || search.includes(q);
+        row.style.display = (matchFilter && matchSearch) ? '' : 'none';
+      });
+    }
+
+    const objetLabels = {
+      sejour: 'Séjour au domaine',
+      chasse: 'Week-end de chasse',
+      evenement: 'Événement privé',
+      autre: 'Autre correspondance'
+    };
+
+    function openModal(id, nom, prenom, email, objet, message, date) {
+      document.getElementById('mId').textContent      = 'Correspondance #' + String(id).padStart(3, '0');
+      document.getElementById('mName').textContent    = nom + ' ' + prenom;
+      document.getElementById('mEmail').textContent   = email;
+      document.getElementById('mObjet').textContent   = objetLabels[objet] || objet;
+      document.getElementById('mDate').textContent    = date;
+      document.getElementById('mMessage').textContent = message;
+      document.getElementById('modalOverlay').classList.add('open');
+    }
+
+    function closeModal(e) {
+      if (e.target === document.getElementById('modalOverlay')) closeModalDirect();
+    }
+
+    function closeModalDirect() {
+      document.getElementById('modalOverlay').classList.remove('open');
+    }
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') closeModalDirect();
+    });
+  </script>
+</body>
+</html>
