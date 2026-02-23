@@ -40,6 +40,26 @@ def mongraphique():
 def histogramme():
     return render_template("histogramme.html")
 
+@app.get("/lyon")
+def api_lyon():
+    url = "https://api.open-meteo.com/v1/forecast?latitude=45.7640&longitude=4.8357&hourly=relativehumidity_2m"
+    response = requests.get(url)
+    data = response.json()
+
+    times = data.get("hourly", {}).get("time", [])
+    humidity = data.get("hourly", {}).get("relativehumidity_2m", [])
+
+    n = min(len(times), len(humidity))
+    result = [
+        {"datetime": times[i], "humidity_pct": humidity[i]}
+        for i in range(n)
+    ]
+    return jsonify(result)
+
+@app.route("/atelier")
+def atelier():
+    return render_template("atelier.html")
+
 # Ne rien mettre après ce commentaire
     
 if __name__ == "__main__":

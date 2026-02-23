@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Atelier — Humidité de Lyon</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+  <style>
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --border:    #21262d;
+      --mist:      #8bb4d8;
+      --mist-dim:  #4a7fa8;
+      --rain:      #58a6ff;
+      --rain-glow: rgba(88, 166, 255, 0.18);
+      --fog:       #c9d1d9;
+      --fog-dim:   #6e7681;
+      --accent:    #79c0ff;
+      --green:     #56d364;
+      --amber:     #e3b341;
+      --red:       #f85149;
+      --white:     #f0f6fc;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--fog);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* === ANIMATED RAIN BACKGROUND === */
+    .rain-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .raindrop {
+      position: absolute;
+      top: -20px;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, rgba(88, 166, 255, 0.25));
+      animation: fall linear infinite;
+      border-radius: 1px;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(110vh); }
+    }
+
+    /* === HEADER === */
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 48px 56px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .header-left {}
+
+    .city-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(88, 166, 255, 0.08);
+      border: 1px solid rgba(88, 166, 255, 0.2);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    .city-badge::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      box-shadow: 0 0 6px var(--green);
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(40px, 5vw, 68px);
+      font-weight: 400;
+      color: var(--white);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--mist);
+    }
+
+    .subtitle {
+      margin-top: 12px;
+      font-size: 14px;
+      color: var(--fog-dim);
+      letter-spacing: 0.02em;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .header-right {
+      text-align: right;
+      padding-top: 8px;
+    }
+
+    .api-badge {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--fog-dim);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 14px;
+      line-height: 1.8;
+    }
+
+    .api-badge .url { color: var(--rain); }
+
+    /* === KPI CARDS === */
+    .kpi-row {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      padding: 40px 56px 0;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.3s forwards;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s;
+    }
+
+    .kpi-card:hover { border-color: rgba(88, 166, 255, 0.35); }
+
+    .kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--kpi-color, var(--accent));
+      opacity: 0.6;
+    }
+
+    .kpi-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--fog-dim);
+      margin-bottom: 10px;
+    }
+
+    .kpi-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 36px;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .kpi-value span {
+      font-size: 16px;
+      color: var(--fog-dim);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+    }
+
+    .kpi-sub {
+      margin-top: 8px;
+      font-size: 11px;
+      color: var(--fog-dim);
+    }
+
+    .kpi-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+    }
+
+    /* === CHART AREA === */
+    .chart-section {
+      position: relative;
+      z-index: 10;
+      padding: 32px 56px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.5s forwards;
+    }
+
+    .chart-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .chart-card-header {
+      padding: 24px 28px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .chart-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--white);
+    }
+
+    .chart-title em { font-style: italic; color: var(--mist); }
+
+    .chart-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .ctrl-btn {
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      border: 1px solid var(--border);
+      cursor: pointer;
+      background: transparent;
+      color: var(--fog-dim);
+      transition: all 0.2s;
+    }
+
+    .ctrl-btn.active, .ctrl-btn:hover {
+      background: rgba(88, 166, 255, 0.1);
+      border-color: rgba(88, 166, 255, 0.4);
+      color: var(--accent);
+    }
+
+    .chart-legend {
+      padding: 12px 28px 0;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--fog-dim);
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    #chart_div {
+      padding: 12px 0 8px;
+      min-height: 360px;
+    }
+
+    /* Loading state */
+    .loading-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 360px;
+      gap: 16px;
+    }
+
+    .loader-ring {
+      width: 40px;
+      height: 40px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--fog-dim);
+      letter-spacing: 0.1em;
+    }
+
+    /* === HOURLY STRIP === */
+    .strip-section {
+      position: relative;
+      z-index: 10;
+      padding: 0 56px 48px;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.7s forwards;
+    }
+
+    .strip-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--fog-dim);
+      margin-bottom: 14px;
+    }
+
+    .strip {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .strip-item {
+      flex-shrink: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+      text-align: center;
+      min-width: 72px;
+      transition: border-color 0.2s, transform 0.2s;
+      cursor: default;
+    }
+
+    .strip-item:hover {
+      border-color: rgba(88, 166, 255, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .strip-hour {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--fog-dim);
+      margin-bottom: 6px;
+    }
+
+    .strip-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 20px;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .strip-unit {
+      font-size: 9px;
+      color: var(--fog-dim);
+      margin-top: 2px;
+      font-family: 'DM Mono', monospace;
+    }
+
+    .strip-bar {
+      margin-top: 8px;
+      height: 3px;
+      border-radius: 2px;
+      background: var(--border);
+      overflow: hidden;
+    }
+
+    .strip-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.8s ease;
+    }
+
+    /* === FOOTER === */
+    footer {
+      position: relative;
+      z-index: 10;
+      border-top: 1px solid var(--border);
+      padding: 16px 56px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-left {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--fog-dim);
+    }
+
+    .footer-right {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--fog-dim);
+    }
+
+    .footer-right a {
+      color: var(--rain);
+      text-decoration: none;
+    }
+
+    /* === ANIMATIONS === */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 900px) {
+      header { padding: 32px 24px 0; flex-direction: column; gap: 16px; }
+      .header-right { text-align: left; }
+      .kpi-row { grid-template-columns: 1fr 1fr; padding: 24px 24px 0; }
+      .chart-section, .strip-section { padding-left: 24px; padding-right: 24px; }
+      footer { padding: 16px 24px; flex-direction: column; gap: 6px; }
+    }
+
+    @media (max-width: 540px) {
+      .kpi-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+      .kpi-value { font-size: 28px; }
+      h1 { font-size: 38px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animated rain background -->
+  <div class="rain-layer" id="rainLayer"></div>
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-left" style="opacity:0;animation:fadeUp 0.7s ease 0.05s forwards">
+      <div class="city-badge">Lyon, Auvergne-Rhône-Alpes · Live</div>
+      <h1>Humidité<br><em>atmosphérique</em></h1>
+      <p class="subtitle">lat. 45.7640 · lon. 4.8357 · hourly relativehumidity_2m</p>
+    </div>
+    <div class="header-right" style="opacity:0;animation:fadeUp 0.7s ease 0.15s forwards">
+      <div class="api-badge">
+        <div>Source : open-meteo.com</div>
+        <div class="url">/forecast?hourly=relativehumidity_2m</div>
+        <div id="lastUpdate" style="margin-top:4px">Chargement…</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- KPI CARDS -->
+  <div class="kpi-row" id="kpiRow">
+    <div class="kpi-card" style="--kpi-color:#58a6ff">
+      <div class="kpi-label">Humidité actuelle</div>
+      <div class="kpi-value" id="kpiNow">—<span> %</span></div>
+      <div class="kpi-sub" id="kpiNowSub">—</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#56d364">
+      <div class="kpi-label">Min. 24h</div>
+      <div class="kpi-value" id="kpiMin">—<span> %</span></div>
+      <div class="kpi-sub">Point le plus sec</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#e3b341">
+      <div class="kpi-label">Max. 24h</div>
+      <div class="kpi-value" id="kpiMax">—<span> %</span></div>
+      <div class="kpi-sub">Point le plus humide</div>
+    </div>
+    <div class="kpi-card" style="--kpi-color:#bc8cff">
+      <div class="kpi-label">Moyenne 24h</div>
+      <div class="kpi-value" id="kpiAvg">—<span> %</span></div>
+      <div class="kpi-sub">Humidité moyenne</div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="chart-section">
+    <div class="chart-card">
+      <div class="chart-card-header">
+        <div>
+          <div class="chart-title">Évolution de l'humidité · <em>AreaChart</em></div>
+        </div>
+        <div class="chart-controls">
+          <button class="ctrl-btn active" onclick="redraw(24, this)">24 h</button>
+          <button class="ctrl-btn" onclick="redraw(48, this)">48 h</button>
+          <button class="ctrl-btn" onclick="redraw(96, this)">4 jours</button>
+        </div>
+      </div>
+      <div class="chart-legend">
+        <div class="legend-item">
+          <div class="legend-dot" style="background:#58a6ff"></div>
+          Humidité relative (%)
+        </div>
+        <div class="legend-item">
+          <div class="legend-dot" style="background:rgba(88,166,255,0.2); border: 1px solid #58a6ff"></div>
+          Zone remplie
+        </div>
+      </div>
+      <div id="chart_div">
+        <div class="loading-state">
+          <div class="loader-ring"></div>
+          <div class="loading-text">Récupération des données météo…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HOURLY STRIP -->
+  <div class="strip-section">
+    <div class="strip-label">Prochaines 12 heures · heure par heure</div>
+    <div class="strip" id="hourlyStrip">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-left">Atelier Métrologie — Flask + Open-Meteo + Google Charts AreaChart</div>
+    <div class="footer-right">Données : <a href="https://open-meteo.com" target="_blank">open-meteo.com</a> · Licence libre</div>
+  </footer>
+
+  <script>
+    // ── Rain animation ──────────────────────────────────────────────────
+    (function createRain() {
+      const layer = document.getElementById('rainLayer');
+      for (let i = 0; i < 55; i++) {
+        const d = document.createElement('div');
+        d.className = 'raindrop';
+        const left  = Math.random() * 100;
+        const dur   = 1.4 + Math.random() * 2.4;
+        const delay = -Math.random() * 4;
+        const h     = 60 + Math.random() * 120;
+        const op    = 0.08 + Math.random() * 0.18;
+        d.style.cssText = `left:${left}%;height:${h}px;animation-duration:${dur}s;animation-delay:${delay}s;opacity:${op}`;
+        layer.appendChild(d);
+      }
+    })();
+
+    // ── Google Charts ──────────────────────────────────────────────────
+    google.charts.load('current', { packages: ['corechart'] });
+    google.charts.setOnLoadCallback(init);
+
+    let allData = [];
+    let currentHours = 24;
+
+    async function init() {
+      try {
+        const res  = await fetch('/lyon');
+        const json = await res.json();
+        allData = json;
+        updateKPIs(json.slice(0, 24));
+        drawChart(24);
+        buildStrip(json);
+        document.getElementById('lastUpdate').textContent =
+          'Mis à jour : ' + new Date().toLocaleTimeString('fr-FR');
+      } catch (e) {
+        document.getElementById('chart_div').innerHTML =
+          `<div class="loading-state"><div style="color:#f85149;font-family:'DM Mono',monospace;font-size:12px">
+            ⚠ Impossible de charger /lyon<br>
+            <span style="opacity:0.5;font-size:10px">Vérifiez que le serveur Flask est actif</span>
+          </div></div>`;
+      }
+    }
+
+    function updateKPIs(slice) {
+      const vals = slice.map(d => d.humidity_pct).filter(v => v !== null);
+      const now  = vals[0];
+      const min  = Math.min(...vals);
+      const max  = Math.max(...vals);
+      const avg  = Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+
+      document.getElementById('kpiNow').innerHTML = `${now}<span> %</span>`;
+      document.getElementById('kpiMin').innerHTML = `${min}<span> %</span>`;
+      document.getElementById('kpiMax').innerHTML = `${max}<span> %</span>`;
+      document.getElementById('kpiAvg').innerHTML = `${avg}<span> %</span>`;
+
+      // Contextual label for current humidity
+      let label = '', color = '';
+      if (now < 30)       { label = '🌵 Très sec';    color = '#e3b341'; }
+      else if (now < 50)  { label = '✓ Confortable';  color = '#56d364'; }
+      else if (now < 70)  { label = '💧 Modéré';      color = '#58a6ff'; }
+      else if (now < 85)  { label = '🌧 Élevé';       color = '#79c0ff'; }
+      else                { label = '🌫 Très humide'; color = '#bc8cff'; }
+
+      document.getElementById('kpiNowSub').innerHTML =
+        `<span class="kpi-tag" style="background:${color}22;color:${color}">${label}</span>`;
+    }
+
+    function drawChart(hours) {
+      const slice = allData.slice(0, hours);
+
+      const dataTable = new google.visualization.DataTable();
+      dataTable.addColumn('string', 'Heure');
+      dataTable.addColumn('number', 'Humidité (%)');
+      dataTable.addColumn({type: 'string', role: 'tooltip', p: {html: true}});
+
+      slice.forEach(p => {
+        const dt  = new Date(p.datetime);
+        const lbl = dt.toLocaleDateString('fr-FR', {day:'2-digit', month:'short'}) + ' '
+                  + dt.toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit'});
+        const tip = `<div style="padding:10px 14px;font-family:'DM Sans',sans-serif;background:#161b22;border:1px solid #21262d;border-radius:8px;color:#c9d1d9">
+          <b style="color:#f0f6fc">${lbl}</b><br>
+          <span style="color:#58a6ff;font-size:18px;font-weight:500">${p.humidity_pct} %</span><br>
+          <span style="font-size:11px;color:#6e7681">Humidité relative</span>
+        </div>`;
+        dataTable.addRow([lbl, p.humidity_pct, tip]);
+      });
+
+      const options = {
+        backgroundColor:   'transparent',
+        chartArea:         { left: 50, right: 20, top: 20, bottom: 55, width: '100%' },
+        colors:            ['#58a6ff'],
+        areaOpacity:       0.15,
+        lineWidth:         2.5,
+        pointSize:         0,
+        hAxis: {
+          textStyle:       { color: '#6e7681', fontName: 'DM Mono', fontSize: 10 },
+          gridlines:       { color: 'transparent' },
+          showTextEvery:   Math.ceil(hours / 8),
+        },
+        vAxis: {
+          minValue:        0,
+          maxValue:        100,
+          textStyle:       { color: '#6e7681', fontName: 'DM Mono', fontSize: 10 },
+          gridlines:       { color: '#21262d', count: 5 },
+          baselineColor:   '#21262d',
+        },
+        tooltip:           { isHtml: true, trigger: 'focus' },
+        legend:            { position: 'none' },
+        animation:         { startup: true, duration: 700, easing: 'out' },
+        crosshair:         { trigger: 'both', color: '#58a6ff', opacity: 0.4 },
+      };
+
+      document.getElementById('chart_div').innerHTML = '<div id="google_chart" style="width:100%;height:360px"></div>';
+      const chart = new google.visualization.AreaChart(document.getElementById('google_chart'));
+      chart.draw(dataTable, options);
+    }
+
+    function redraw(hours, btn) {
+      currentHours = hours;
+      document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      updateKPIs(allData.slice(0, Math.min(hours, 24)));
+      drawChart(hours);
+    }
+
+    function buildStrip(data) {
+      const strip = document.getElementById('hourlyStrip');
+      strip.innerHTML = '';
+      const next12 = data.slice(0, 12);
+      next12.forEach(p => {
+        const dt   = new Date(p.datetime);
+        const hm   = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        const val  = p.humidity_pct;
+        const pct  = val + '%';
+
+        // Color gradient: low=amber, mid=blue, high=purple
+        let fillColor;
+        if (val < 40)       fillColor = '#e3b341';
+        else if (val < 65)  fillColor = '#58a6ff';
+        else                fillColor = '#bc8cff';
+
+        const item = document.createElement('div');
+        item.className = 'strip-item';
+        item.innerHTML = `
+          <div class="strip-hour">${hm}</div>
+          <div class="strip-val">${val}</div>
+          <div class="strip-unit">%</div>
+          <div class="strip-bar">
+            <div class="strip-bar-fill" style="width:${pct};background:${fillColor}"></div>
+          </div>`;
+        strip.appendChild(item);
+      });
+    }
+  </script>
+</body>
+</html>
