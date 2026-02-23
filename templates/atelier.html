@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Atelier — Humidité de Lyon</title>
+  <title>Atelier — Humidité de Versailles</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
@@ -458,9 +458,9 @@
   <!-- HEADER -->
   <header>
     <div class="header-left" style="opacity:0;animation:fadeUp 0.7s ease 0.05s forwards">
-      <div class="city-badge">Lyon, Auvergne-Rhône-Alpes · Live</div>
+      <div class="city-badge">Versailles, Île-de-France · Live</div>
       <h1>Humidité<br><em>atmosphérique</em></h1>
-      <p class="subtitle">lat. 45.7640 · lon. 4.8357 · hourly relativehumidity_2m</p>
+      <p class="subtitle">lat. 48.8048 · lon. 2.1203 · hourly relativehumidity_2m</p>
     </div>
     <div class="header-right" style="opacity:0;animation:fadeUp 0.7s ease 0.15s forwards">
       <div class="api-badge">
@@ -537,7 +537,7 @@
 
   <!-- FOOTER -->
   <footer>
-    <div class="footer-left">Atelier Métrologie — Flask + Open-Meteo + Google Charts AreaChart</div>
+    <div class="footer-left">Atelier Métrologie — Versailles · Flask + Open-Meteo + Google Charts AreaChart</div>
     <div class="footer-right">Données : <a href="https://open-meteo.com" target="_blank">open-meteo.com</a> · Licence libre</div>
   </footer>
 
@@ -564,21 +564,32 @@
 
     let allData = [];
     let currentHours = 24;
+    let startIdx = 0; // index of current hour in allData
 
     async function init() {
       try {
-        const res  = await fetch('/lyon');
+        const res  = await fetch('/versailles');
         const json = await res.json();
         allData = json;
-        updateKPIs(json.slice(0, 24));
-        drawChart(24);
-        buildStrip(json);
+
+        // Find index of current hour in the data
+        const now = new Date();
+        now.setMinutes(0, 0, 0); // floor to current hour
+        startIdx = 0;
+        for (let i = 0; i < json.length; i++) {
+          const t = new Date(json[i].datetime);
+          if (t >= now) { startIdx = i; break; }
+        }
+
+        updateKPIs(json.slice(startIdx, startIdx + 24));
+        drawChart(24, startIdx);
+        buildStrip(json, startIdx);
         document.getElementById('lastUpdate').textContent =
           'Mis à jour : ' + new Date().toLocaleTimeString('fr-FR');
       } catch (e) {
         document.getElementById('chart_div').innerHTML =
           `<div class="loading-state"><div style="color:#f85149;font-family:'DM Mono',monospace;font-size:12px">
-            ⚠ Impossible de charger /lyon<br>
+            ⚠ Impossible de charger /versailles<br>
             <span style="opacity:0.5;font-size:10px">Vérifiez que le serveur Flask est actif</span>
           </div></div>`;
       }
@@ -608,8 +619,8 @@
         `<span class="kpi-tag" style="background:${color}22;color:${color}">${label}</span>`;
     }
 
-    function drawChart(hours) {
-      const slice = allData.slice(0, hours);
+    function drawChart(hours, startIdx = 0) {
+      const slice = allData.slice(startIdx, startIdx + hours);
 
       const dataTable = new google.visualization.DataTable();
       dataTable.addColumn('string', 'Heure');
@@ -662,19 +673,20 @@
       currentHours = hours;
       document.querySelectorAll('.ctrl-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      updateKPIs(allData.slice(0, Math.min(hours, 24)));
-      drawChart(hours);
+      updateKPIs(allData.slice(startIdx, startIdx + Math.min(hours, 24)));
+      drawChart(hours, startIdx);
     }
 
-    function buildStrip(data) {
+    function buildStrip(data, idx = 0) {
       const strip = document.getElementById('hourlyStrip');
       strip.innerHTML = '';
-      const next12 = data.slice(0, 12);
-      next12.forEach(p => {
+      const next12 = data.slice(idx, idx + 12);
+      next12.forEach((p, i) => {
         const dt   = new Date(p.datetime);
         const hm   = dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
         const val  = p.humidity_pct;
         const pct  = val + '%';
+        const isNow = i === 0;
 
         // Color gradient: low=amber, mid=blue, high=purple
         let fillColor;
@@ -684,8 +696,9 @@
 
         const item = document.createElement('div');
         item.className = 'strip-item';
+        if (isNow) item.style.cssText = 'border-color:rgba(88,166,255,0.5);box-shadow:0 0 12px rgba(88,166,255,0.12)';
         item.innerHTML = `
-          <div class="strip-hour">${hm}</div>
+          <div class="strip-hour" style="${isNow ? 'color:#58a6ff;font-weight:500' : ''}">${isNow ? '▶ maintenant' : hm}</div>
           <div class="strip-val">${val}</div>
           <div class="strip-unit">%</div>
           <div class="strip-bar">
