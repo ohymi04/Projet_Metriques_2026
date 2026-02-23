@@ -1,0 +1,25 @@
+<script>
+google.charts.load('current', { packages: ['corechart'] });
+google.charts.setOnLoadCallback(drawChart);
+
+async function drawChart() {
+  const res = await fetch('/paris');
+  const json = await res.json();
+
+  const data = new google.visualization.DataTable();
+  data.addColumn('string', 'Date');
+  data.addColumn('number', 'Température');
+
+  json.slice(0, 24).forEach(p => {
+    data.addRow([p.datetime, p.temperature_c]);
+  });
+
+  const options = {
+    title: 'Histogramme Température Paris',
+    legend: { position: 'none' }
+  };
+
+  const chart = new google.visualization.ColumnChart(document.getElementById('chart'));
+  chart.draw(data, options);
+}
+</script>
