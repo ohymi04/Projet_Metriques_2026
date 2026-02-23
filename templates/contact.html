@@ -1,6 +1,154 @@
-<form>
-  <input type="text" placeholder="Nom"><br><br>
-  <input type="text" placeholder="Prénom"><br><br>
-  <textarea placeholder="Votre message"></textarea><br><br>
-  <button>Envoyer</button>
-</form>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Correspondance Privée</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Libre+Baskerville&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --forest: #1f2a24;
+  --deep-green: #2f3e35;
+  --cream: #f5f1e8;
+  --gold: #bfa46f;
+  --burgundy: #5a2d2d;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: linear-gradient(rgba(20,25,22,0.85), rgba(20,25,22,0.85)),
+              url('https://images.unsplash.com/photo-1507089947368-19c1da9775ae?auto=format&fit=crop&w=1600&q=80');
+  background-size: cover;
+  background-position: center;
+  font-family: 'Libre Baskerville', serif;
+  color: var(--cream);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.container {
+  background: rgba(47, 62, 53, 0.92);
+  padding: 60px;
+  width: 90%;
+  max-width: 700px;
+  border: 1px solid var(--gold);
+  box-shadow: 0 0 40px rgba(0,0,0,0.6);
+  backdrop-filter: blur(6px);
+}
+
+h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 10px;
+  letter-spacing: 1px;
+}
+
+.subtitle {
+  text-align: center;
+  font-style: italic;
+  margin-bottom: 40px;
+  color: var(--gold);
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+label {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gold);
+}
+
+input, textarea {
+  background: transparent;
+  border: 1px solid var(--gold);
+  padding: 12px;
+  color: var(--cream);
+  font-family: 'Libre Baskerville', serif;
+  font-size: 1rem;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--cream);
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+button {
+  margin-top: 20px;
+  padding: 14px;
+  background: var(--burgundy);
+  border: 1px solid var(--gold);
+  color: var(--cream);
+  font-family: 'Playfair Display', serif;
+  font-size: 1rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  background: var(--gold);
+  color: var(--forest);
+}
+
+.footer-note {
+  margin-top: 30px;
+  text-align: center;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  font-style: italic;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>Correspondance Privée</h1>
+  <div class="subtitle">Maison & Domaine — Depuis 1894</div>
+
+  <form>
+    <div>
+      <label>Nom</label>
+      <input type="text" placeholder="Votre nom de famille">
+    </div>
+
+    <div>
+      <label>Prénom</label>
+      <input type="text" placeholder="Votre prénom">
+    </div>
+
+    <div>
+      <label>Message</label>
+      <textarea placeholder="Écrivez votre message avec distinction..."></textarea>
+    </div>
+
+    <button type="submit">Envoyer la correspondance</button>
+  </form>
+
+  <div class="footer-note">
+    Toute correspondance est traitée avec la plus grande discrétion.
+  </div>
+</div>
+
+</body>
+</html>
