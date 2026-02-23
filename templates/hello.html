@@ -1,9 +1,417 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
-  <head><meta charset="utf-8"><title>Hello</title></head>
-  <body>
-    <h1>ATELIER METRIQUES</h1>
-    <h2>Nom Prénom : Nguyen Dat-Sam</h2>
-  </body>
-</html>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Hello — Atelier Métriques</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Cinzel:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #f5f0e8;
+      --parchment: #ede5d0;
+      --dark-brown: #2a1f14;
+      --mid-brown: #5c4a32;
+      --hunter: #3d4a2e;
+      --gold: #b89a5a;
+      --bark: #8b6f47;
+      --fog: #d4cfc4;
+    }
 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      background-color: var(--cream);
+      color: var(--dark-brown);
+      font-family: 'EB Garamond', serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    /* Grain texture */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 1000; opacity: 0.6;
+    }
+
+    /* Decorative border */
+    .page-frame {
+      position: fixed; inset: 16px;
+      border: 1px solid rgba(184, 154, 90, 0.35);
+      pointer-events: none; z-index: 999;
+    }
+    .page-frame::before {
+      content: '';
+      position: absolute; inset: 5px;
+      border: 1px solid rgba(184, 154, 90, 0.15);
+    }
+
+    /* Corner ornaments */
+    .corner { position: fixed; width: 48px; height: 48px; z-index: 1001; }
+    .corner svg { width: 100%; height: 100%; }
+    .corner-tl { top: 10px; left: 10px; }
+    .corner-tr { top: 10px; right: 10px; transform: scaleX(-1); }
+    .corner-bl { bottom: 10px; left: 10px; transform: scaleY(-1); }
+    .corner-br { bottom: 10px; right: 10px; transform: scale(-1); }
+
+    /* Background landscape */
+    .bg-landscape {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 42vh;
+      pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .bg-landscape svg { width: 100%; height: 100%; display: block; }
+
+    /* === MAIN CONTENT === */
+    .wrapper {
+      position: relative;
+      z-index: 10;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 40px;
+      text-align: center;
+    }
+
+    /* Top crest / monogram */
+    .crest {
+      width: 72px; height: 72px;
+      margin: 0 auto 40px;
+      color: var(--gold);
+      opacity: 0;
+      animation: fadeDown 0.8s ease 0.05s forwards;
+    }
+
+    /* Estate label */
+    .estate-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 36px;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.2s forwards;
+    }
+    .estate-badge-line { height: 1px; width: 40px; background: var(--gold); }
+    .estate-badge-text {
+      font-family: 'Cinzel', serif;
+      font-size: 9px;
+      letter-spacing: 0.35em;
+      color: var(--gold);
+      text-transform: uppercase;
+    }
+
+    /* Main title */
+    .main-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(56px, 8vw, 110px);
+      font-weight: 300;
+      line-height: 0.95;
+      color: var(--dark-brown);
+      letter-spacing: -0.02em;
+      opacity: 0;
+      animation: fadeUp 0.9s ease 0.3s forwards;
+    }
+    .main-title em {
+      display: block;
+      font-style: italic;
+      color: var(--mid-brown);
+      font-size: 0.75em;
+    }
+
+    /* Ornamental divider */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 40px auto;
+      width: 320px;
+      max-width: 80vw;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.45s forwards;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold));
+    }
+    .divider::after { background: linear-gradient(to left, transparent, var(--gold)); }
+    .divider svg { width: 18px; height: 18px; color: var(--gold); flex-shrink: 0; }
+
+    /* Author card */
+    .author-card {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.55s forwards;
+    }
+
+    .author-eyebrow {
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: 0.4em;
+      text-transform: uppercase;
+      color: var(--bark);
+    }
+
+    .author-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(28px, 4vw, 46px);
+      font-weight: 300;
+      font-style: italic;
+      color: var(--dark-brown);
+      letter-spacing: 0.02em;
+    }
+
+    /* Nav pills */
+    .nav-pills {
+      display: flex;
+      gap: 12px;
+      margin-top: 56px;
+      flex-wrap: wrap;
+      justify-content: center;
+      opacity: 0;
+      animation: fadeUp 0.7s ease 0.7s forwards;
+    }
+
+    .nav-pill {
+      padding: 10px 26px;
+      border: 1px solid rgba(184, 154, 90, 0.35);
+      background: transparent;
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--mid-brown);
+      text-decoration: none;
+      position: relative;
+      overflow: hidden;
+      transition: color 0.3s;
+    }
+    .nav-pill::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: var(--dark-brown);
+      transform: translateY(101%);
+      transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .nav-pill:hover::before { transform: translateY(0); }
+    .nav-pill:hover { color: var(--parchment); }
+    .nav-pill span { position: relative; z-index: 1; }
+
+    /* Bottom label */
+    .bottom-note {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      letter-spacing: 0.3em;
+      color: rgba(184, 154, 90, 0.45);
+      text-transform: uppercase;
+      white-space: nowrap;
+      opacity: 0;
+      animation: fadeUp 0.6s ease 0.9s forwards;
+    }
+
+    /* === ANIMATIONS === */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .page-frame, .corner { display: none; }
+      .nav-pills { gap: 8px; }
+      .nav-pill { padding: 8px 18px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="page-frame"></div>
+
+  <div class="corner corner-tl">
+    <svg viewBox="0 0 48 48" fill="none">
+      <path d="M2 2 L18 2 M2 2 L2 18" stroke="#b89a5a" stroke-width="1.2"/>
+      <path d="M2 2 L12 12" stroke="#b89a5a" stroke-width="0.6" opacity="0.4"/>
+      <circle cx="18" cy="2" r="1.5" fill="#b89a5a" opacity="0.6"/>
+      <circle cx="2" cy="18" r="1.5" fill="#b89a5a" opacity="0.6"/>
+    </svg>
+  </div>
+  <div class="corner corner-tr"><svg viewBox="0 0 48 48" fill="none"><path d="M2 2 L18 2 M2 2 L2 18" stroke="#b89a5a" stroke-width="1.2"/><path d="M2 2 L12 12" stroke="#b89a5a" stroke-width="0.6" opacity="0.4"/><circle cx="18" cy="2" r="1.5" fill="#b89a5a" opacity="0.6"/><circle cx="2" cy="18" r="1.5" fill="#b89a5a" opacity="0.6"/></svg></div>
+  <div class="corner corner-bl"><svg viewBox="0 0 48 48" fill="none"><path d="M2 2 L18 2 M2 2 L2 18" stroke="#b89a5a" stroke-width="1.2"/><path d="M2 2 L12 12" stroke="#b89a5a" stroke-width="0.6" opacity="0.4"/><circle cx="18" cy="2" r="1.5" fill="#b89a5a" opacity="0.6"/><circle cx="2" cy="18" r="1.5" fill="#b89a5a" opacity="0.6"/></svg></div>
+  <div class="corner corner-br"><svg viewBox="0 0 48 48" fill="none"><path d="M2 2 L18 2 M2 2 L2 18" stroke="#b89a5a" stroke-width="1.2"/><path d="M2 2 L12 12" stroke="#b89a5a" stroke-width="0.6" opacity="0.4"/><circle cx="18" cy="2" r="1.5" fill="#b89a5a" opacity="0.6"/><circle cx="2" cy="18" r="1.5" fill="#b89a5a" opacity="0.6"/></svg></div>
+
+  <!-- Landscape -->
+  <div class="bg-landscape">
+    <svg viewBox="0 0 1400 320" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="hillGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#8a9470"/>
+          <stop offset="100%" stop-color="#6b7355"/>
+        </linearGradient>
+        <linearGradient id="darkHill" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#3d4a2e"/>
+          <stop offset="100%" stop-color="#2a3520"/>
+        </linearGradient>
+      </defs>
+      <!-- Far mist -->
+      <ellipse cx="300" cy="270" rx="400" ry="110" fill="#c4bfad" opacity="0.25"/>
+      <ellipse cx="900" cy="285" rx="550" ry="100" fill="#b8b3a2" opacity="0.2"/>
+      <ellipse cx="1250" cy="270" rx="280" ry="90" fill="#c0baa9" opacity="0.22"/>
+      <!-- Rolling hills -->
+      <path d="M0 210 Q180 140 380 182 Q580 220 680 162 Q840 102 1010 158 Q1160 208 1310 152 Q1380 122 1400 138 L1400 320 L0 320 Z" fill="url(#hillGrad)" opacity="0.3"/>
+      <!-- Dark foreground -->
+      <path d="M0 255 Q120 228 280 242 Q440 255 590 232 Q730 210 880 244 Q1020 272 1170 248 Q1300 228 1400 254 L1400 320 L0 320 Z" fill="url(#darkHill)" opacity="0.5"/>
+      <!-- Stone wall -->
+      <path d="M0 288 Q35 282 70 287 Q105 291 140 284 Q175 278 210 285 L210 294 L0 294 Z" fill="#5c4a32" opacity="0.18"/>
+      <!-- Trees left -->
+      <g opacity="0.5" transform="translate(55, 168)">
+        <line x1="0" y1="90" x2="0" y2="0" stroke="#3d4a2e" stroke-width="3.5"/>
+        <line x1="0" y1="22" x2="-26" y2="-18" stroke="#3d4a2e" stroke-width="2"/>
+        <line x1="0" y1="12" x2="20" y2="-24" stroke="#3d4a2e" stroke-width="1.8"/>
+        <line x1="0" y1="34" x2="-34" y2="6" stroke="#3d4a2e" stroke-width="1.5"/>
+        <line x1="0" y1="28" x2="28" y2="6" stroke="#3d4a2e" stroke-width="1.5"/>
+        <line x1="-26" y1="-18" x2="-40" y2="-34" stroke="#3d4a2e" stroke-width="1.2"/>
+        <line x1="-26" y1="-18" x2="-14" y2="-36" stroke="#3d4a2e" stroke-width="1.2"/>
+        <line x1="20" y1="-24" x2="32" y2="-44" stroke="#3d4a2e" stroke-width="1.2"/>
+      </g>
+      <!-- Tree 2 -->
+      <g opacity="0.38" transform="translate(190, 195)">
+        <line x1="0" y1="62" x2="0" y2="0" stroke="#3d4a2e" stroke-width="2.2"/>
+        <line x1="0" y1="14" x2="-18" y2="-10" stroke="#3d4a2e" stroke-width="1.5"/>
+        <line x1="0" y1="8" x2="14" y2="-18" stroke="#3d4a2e" stroke-width="1.2"/>
+        <line x1="0" y1="22" x2="-22" y2="4" stroke="#3d4a2e" stroke-width="1.2"/>
+        <line x1="-18" y1="-10" x2="-28" y2="-26" stroke="#3d4a2e" stroke-width="1"/>
+      </g>
+      <!-- Tree right -->
+      <g opacity="0.35" transform="translate(1320, 185)">
+        <line x1="0" y1="78" x2="0" y2="0" stroke="#3d4a2e" stroke-width="2.8"/>
+        <line x1="0" y1="18" x2="-20" y2="-14" stroke="#3d4a2e" stroke-width="1.8"/>
+        <line x1="0" y1="10" x2="16" y2="-20" stroke="#3d4a2e" stroke-width="1.5"/>
+        <line x1="0" y1="28" x2="-28" y2="5" stroke="#3d4a2e" stroke-width="1.4"/>
+        <line x1="-20" y1="-14" x2="-32" y2="-30" stroke="#3d4a2e" stroke-width="1.1"/>
+      </g>
+      <!-- Manor silhouette (centre, lointain) -->
+      <g transform="translate(640, 148)" opacity="0.14">
+        <rect x="0" y="44" width="120" height="58" fill="#5c4a32"/>
+        <rect x="14" y="22" width="32" height="44" fill="#5c4a32"/>
+        <rect x="74" y="28" width="30" height="36" fill="#5c4a32"/>
+        <rect x="52" y="4" width="18" height="18" fill="#5c4a32"/>
+        <rect x="18" y="12" width="5" height="12" fill="#5c4a32"/>
+        <rect x="82" y="16" width="5" height="12" fill="#5c4a32"/>
+        <!-- Windows hints -->
+        <rect x="20" y="50" width="10" height="12" fill="#3d3020" opacity="0.6"/>
+        <rect x="40" y="50" width="10" height="12" fill="#3d3020" opacity="0.6"/>
+        <rect x="78" y="38" width="8" height="10" fill="#3d3020" opacity="0.6"/>
+      </g>
+      <!-- Birds -->
+      <g opacity="0.18" fill="none" stroke="#3d4a2e" stroke-width="1.2">
+        <path d="M500 65 Q508 58 516 65"/>
+        <path d="M524 54 Q532 47 540 54"/>
+        <path d="M548 64 Q556 57 564 64"/>
+        <path d="M760 42 Q767 36 774 42"/>
+        <path d="M780 52 Q787 46 794 52"/>
+      </g>
+      <!-- Fence right -->
+      <g opacity="0.18">
+        <line x1="1180" y1="250" x2="1180" y2="272" stroke="#5c4a32" stroke-width="2"/>
+        <line x1="1200" y1="248" x2="1200" y2="270" stroke="#5c4a32" stroke-width="2"/>
+        <line x1="1220" y1="251" x2="1220" y2="273" stroke="#5c4a32" stroke-width="2"/>
+        <line x1="1240" y1="249" x2="1240" y2="271" stroke="#5c4a32" stroke-width="2"/>
+        <line x1="1260" y1="252" x2="1260" y2="274" stroke="#5c4a32" stroke-width="2"/>
+        <line x1="1180" y1="258" x2="1260" y2="260" stroke="#5c4a32" stroke-width="1.2"/>
+        <line x1="1180" y1="266" x2="1260" y2="267" stroke="#5c4a32" stroke-width="1"/>
+      </g>
+      <!-- Deer silhouette (subtle) -->
+      <g transform="translate(870, 238)" opacity="0.12">
+        <ellipse cx="14" cy="18" rx="12" ry="8" fill="#5c4a32"/>
+        <ellipse cx="22" cy="10" rx="6" ry="5" fill="#5c4a32"/>
+        <line x1="8" y1="25" x2="6" y2="36" stroke="#5c4a32" stroke-width="2"/>
+        <line x1="12" y1="26" x2="11" y2="37" stroke="#5c4a32" stroke-width="2"/>
+        <line x1="18" y1="25" x2="17" y2="36" stroke="#5c4a32" stroke-width="2"/>
+        <line x1="22" y1="25" x2="22" y2="36" stroke="#5c4a32" stroke-width="2"/>
+        <!-- Antlers -->
+        <line x1="22" y1="6" x2="18" y2="-2" stroke="#5c4a32" stroke-width="1.2"/>
+        <line x1="18" y1="-2" x2="14" y2="-6" stroke="#5c4a32" stroke-width="1"/>
+        <line x1="18" y1="-2" x2="20" y2="-7" stroke="#5c4a32" stroke-width="1"/>
+        <line x1="22" y1="6" x2="26" y2="-1" stroke="#5c4a32" stroke-width="1.2"/>
+        <line x1="26" y1="-1" x2="22" y2="-5" stroke="#5c4a32" stroke-width="1"/>
+        <line x1="26" y1="-1" x2="28" y2="-6" stroke="#5c4a32" stroke-width="1"/>
+      </g>
+    </svg>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="wrapper">
+
+    <!-- Crest SVG -->
+    <div class="crest">
+      <svg viewBox="0 0 72 72" fill="none" stroke="currentColor" stroke-width="0.9" xmlns="http://www.w3.org/2000/svg">
+        <!-- Shield outline -->
+        <path d="M36 6 L58 14 L58 38 C58 52 36 66 36 66 C36 66 14 52 14 38 L14 14 Z" stroke-width="1"/>
+        <!-- Inner shield -->
+        <path d="M36 12 L52 18 L52 37 C52 48 36 60 36 60 C36 60 20 48 20 37 L20 18 Z" stroke-width="0.6" opacity="0.4"/>
+        <!-- Compass cross -->
+        <line x1="36" y1="20" x2="36" y2="52" stroke-width="0.6" opacity="0.5"/>
+        <line x1="24" y1="36" x2="48" y2="36" stroke-width="0.6" opacity="0.5"/>
+        <!-- Center diamond -->
+        <path d="M36 28 L42 36 L36 44 L30 36 Z" stroke-width="0.8"/>
+        <circle cx="36" cy="36" r="2" fill="currentColor"/>
+        <!-- Top ornament -->
+        <path d="M28 6 L36 2 L44 6" stroke-width="0.8"/>
+        <circle cx="36" cy="2" r="1.5" fill="currentColor"/>
+      </svg>
+    </div>
+
+    <div class="estate-badge">
+      <div class="estate-badge-line"></div>
+      <span class="estate-badge-text">Domaine de Bellechasse · Atelier Métriques 2026</span>
+      <div class="estate-badge-line"></div>
+    </div>
+
+    <h1 class="main-title">
+      Atelier
+      <em>Métriques</em>
+    </h1>
+
+    <div class="divider">
+      <svg viewBox="0 0 18 18" fill="none">
+        <path d="M9 1 C9 1, 13 5, 17 9 C13 13, 9 17, 9 17 C9 17, 5 13, 1 9 C5 5, 9 1, 9 1Z" stroke="currentColor" stroke-width="0.8"/>
+        <circle cx="9" cy="9" r="2" fill="currentColor"/>
+      </svg>
+    </div>
+
+    <div class="author-card">
+      <div class="author-eyebrow">Réalisé par</div>
+      <div class="author-name">Nguyen Dat-Sam</div>
+    </div>
+
+    <nav class="nav-pills">
+      <a href="/rapport" class="nav-pill"><span>Graphique</span></a>
+      <a href="/histogramme" class="nav-pill"><span>Histogramme</span></a>
+      <a href="/atelier" class="nav-pill"><span>Atelier</span></a>
+      <a href="/contact" class="nav-pill"><span>Contact</span></a>
+      <a href="/admin" class="nav-pill"><span>Admin</span></a>
+    </nav>
+
+  </div>
+
+  <div class="bottom-note">Flask · Open-Meteo · Google Charts · SQLite</div>
+
+</body>
+</html>
