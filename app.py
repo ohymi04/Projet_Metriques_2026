@@ -4,7 +4,6 @@ from flask import Flask, jsonify, render_template
 app = Flask(__name__)
 
 
-
 @app.route('/')
 def hello_world():
     return render_template('hello.html')
@@ -12,8 +11,8 @@ def hello_world():
 # Déposez votre code à partir d'ici :
 
 @app.route("/contact")
-def MaPremiereAPI():
-    return "<h2>Ma page de contact</h2>"
+def contact():
+    return render_template("contact.html")
 
 @app.get("/paris")
 def api_paris():
@@ -40,7 +39,7 @@ def mongraphique():
 @app.route("/histogramme")
 def histogramme():
     return render_template("histogramme.html")
-    
+
 # Ne rien mettre après ce commentaire
     
 if __name__ == "__main__":
